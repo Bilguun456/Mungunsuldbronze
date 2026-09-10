@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎓 Class Memories Vault</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0f111a;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .screen {
+            display: none;
+            width: 100%;
+            max-width: 1000px;
+            text-align: center;
+            background: #1a1d29;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 12px 32px rgba(0,0,0,0.6);
+        }
+
+        .active { display: block; }
+
+        input, select, textarea {
+            padding: 14px;
+            font-size: 16px;
+            border: 2px solid #2e3440;
+            border-radius: 8px;
+            background: #242938;
+            color: white;
+            outline: none;
+            margin-bottom: 15px;
+            width: 260px;
+            text-align: center;
+        }
+
+        button {
+            padding: 14px 28px;
+            font-size: 16px;
+            background-color: #4c566a;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: opacity 0.2s;
+        }
+
+        button.primary-btn { background-color: #81a1c1; color: #2e3440; }
+        button:hover { opacity: 0.9; }
+        .back-btn { margin-top: 20px; background-color: #434c5e; }
+        .error-message { color: #bf616a; margin-top: 10px; font-weight: bold; height: 20px; }
+
+        /* Grids */
+        .class-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .class-card {
+            background: #242938;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .class-card:hover { transform: translateY(-5px); border-color: #81a1c1; }
+        .class-card img { width: 100%; height: 200px; object-fit: cover; }
+        .class-card h3 { margin: 15px 0; font-size: 18px; }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .gallery-grid img { width: 100%; height: auto; border-radius: 8px; }
+
+        /* Admin Panel styles */
+        #admin-link {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            color: #4c566a;
+            text-decoration: none;
+            font-size: 12px;
+        }
+        textarea { width: 100%; max-width: 600px; height: 150px; font-family: monospace; text-align: left; }
+    </style>
+</head>
+<body>
+
+    <!-- SCREEN 1: MASTER PASSWORD POPUP -->
+    <div id="screen-master-auth" class="screen active">
+        <h2>🔒 Class Vault Entrance</h2>
+        <p>Enter the main classroom password to enter:</p>
+        <input type="password" id="master-password-input" placeholder="Master Password" onkeydown="if(event.key === 'Enter') unlockMaster()">
+        <br>
+        <button class="primary-btn" onclick="unlockMaster()">Unlock Portal</button>
+        <div id="master-error" class="error-message"></div>
+    </div>
+
+    <!-- SCREEN 2: CLASSMATE SELECTION GRID -->
+    <div id="screen-selection" class="screen">
+        <h2>🎓 Who goes there?</h2>
+        <p>Select your name to unlock your personalized memory vault.</p>
+        <div class="class-grid" id="classmate-cards-container"></div>
+        <br>
+        <a href="#" id="admin-link" onclick="showScreen('screen-admin')">⚙️ Admin Panel</a>
+    </div>
+
+    <!-- SCREEN 3: INDIVIDUAL PASSWORD POPUP -->
+    <div id="screen-individual-auth" class="screen">
+        <h2 id="indiv-title">🔒 Personal Vault</h2>
+        <p>Enter your unique personal password to view your memories:</p>
+        <input type="password" id="indiv-password-input" placeholder="Your Password" onkeydown="if(event.key === 'Enter') unlockIndividual()">
+        <br>
+        <button class="primary-btn" onclick="unlockIndividual()">Unlock Memories</button>
+        <div id="indiv-error" class="error-message"></div>
+        <br>
+        <button class="back-btn" onclick="showScreen('screen-selection')">← Back to Class</button>
+    </div>
+
+    <!-- SCREEN 4: THE MEMORY VAULT CONTENT -->
+    <div id="screen-gallery" class="screen">
+        <h1 id="gallery-title">🎉 Your Memories</h1>
+        <p>A collection of our best moments together.</p>
+        <div class="gallery-grid" id="gallery-images-container"></div>
+        <br>
+        <button class="back-btn" onclick="showScreen('screen-selection')">← Back to Class</button>
+    </div>
+
+    <!-- SCREEN 5: HIDDEN GENERATOR ADMIN PANEL -->
+    <div id="screen-admin" class="screen">
+        <h2>⚙️ Website Layout Manager</h2>
+        <p>Use this to easily add images daily without writing code yourself.</p>
+        
+        <label>Select Classmate:</label><br>
+        <select id="admin-select-student"></select><br>
+
+        <label>Image Filename uploaded to GitHub (e.g., day2.jpg):</label><br>
+        <input type="text" id="admin-image-input" placeholder="image_name.jpg"><br>
+        
+        <button class="primary-btn" onclick="addNewImageToData()">Generate Updated Code</button>
+        
+        <p>👇 Copy the entire box below, open GitHub, and replace your code with it:</p>
+        <textarea id="admin-output-code" readonly onclick="this.select()"></textarea>
+        <br>
+        <button class="back-btn" onclick="showScreen('screen-selection')">← Back to Website</button>
+    </div>
+
+    <!-- DATABASE & ROUTING LOGIC -->
+    <script>
+        const MASTER_PASSWORD = "classof2026"; // Change main website password here
+
+        // MASTER DATABASE: Change names, initial roles, passwords, and placeholder image filenames here
+        let classmatesData = {
+            "alex": {
+                name: "Alex Johnson",
+                roleImage: "https://picsum.photos", 
+                password: "alex-secret-key", 
+                memories: ["https://picsum.photos"]
+            },
+            "sam": {
+                name: "Sam Smith (The Gamer)",
+                roleImage: "https://picsum.photos",
+                password: "sam-secret-key",
+                memories: ["https://picsum.photos"]
+            }
+        };
+
+        let activeClassmateId = null;
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            if(screenId === 'screen-admin') populateAdminDropdown();
+        }
+
+        function unlockMaster() {
+            if (document.getElementById('master-password-input').value === MASTER_PASSWORD) {
+                generateClassGrid();
+                showScreen('screen-selection');
+            } else {
+                document.getElementById('master-error').innerText = "❌ Incorrect Master Password.";
+            }
+        }
+
+        function generateClassGrid() {
+            const container = document.getElementById('classmate-cards-container');
+            container.innerHTML = "";
+            for (const id in classmatesData) {
+                const person = classmatesData[id];
+                const card = document.createElement('div');
+                card.className = "class-card";
+                card.onclick = () => { activeClassmateId = id; document.getElementById('indiv-password-input').value = ""; document.getElementById('indiv-title').innerText = `🔒 ${person.name}'s Vault`; showScreen('screen-individual-auth'); };
+                card.innerHTML = `<img src="${person.roleImage}" alt="${person.name}"><h3>${person.name}</h3>`;
+                container.appendChild(card);
+            }
+        }
+
+        function unlockIndividual() {
+            const targetPerson = classmatesData[activeClassmateId];
+            if (document.getElementById('indiv-password-input').value === targetPerson.password) {
+                document.getElementById('gallery-title').innerText = `🎉 ${targetPerson.name}'s Memories`;
+                const container = document.getElementById('gallery-images-container');
+                container.innerHTML = "";
+                targetPerson.memories.forEach(imgUrl => {
+                    const imgElement = document.createElement('img');
+                    imgElement.src = imgUrl;
+                    container.appendChild(imgElement);
+                });
+                showScreen('screen-gallery');
+            } else {
+                document.getElementById('indiv-error').innerText = "❌ Wrong personal password.";
+            }
+        }
+
+        function populateAdminDropdown() {
+            const dropdown = document.getElementById('admin-select-student');
+            dropdown.innerHTML = "";
+            for (const id in classmatesData) {
+                dropdown.innerHTML += `<option value="${id}">${classmatesData[id].name}</option>`;
+            }
+        }
+
+        function addNewImageToData() {
+            const studentId = document.getElementById('admin-select-student').value;
+            const newImg = document.getElementById('admin-image-input').value.trim();
+            
+            if(!newImg) return alert("Please type an image filename first!");
+            
+            classmatesData[studentId].memories.push(newImg);
+            
