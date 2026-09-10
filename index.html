@@ -59,7 +59,17 @@
         button.primary-btn { background-color: #81a1c1; color: #2e3440; }
         button:hover { opacity: 0.9; }
         .back-btn { margin-top: 20px; background-color: #434c5e; }
-        .error-message { color: #bf616a; margin-top: 10px; font-weight: bold; height: 20px; }
+        
+        .error-message { 
+            color: #ff4757; 
+            margin-top: 15px; 
+            font-weight: bold; 
+            font-size: 18px;
+            background: rgba(255, 71, 87, 0.1);
+            padding: 10px;
+            border-radius: 6px;
+            display: none; /* Hidden unless triggered */
+        }
 
         /* Grids */
         .class-grid {
@@ -91,7 +101,6 @@
 
         .gallery-grid img { width: 100%; height: auto; border-radius: 8px; }
 
-        /* Admin Panel styles */
         #admin-link {
             position: absolute;
             bottom: 15px;
@@ -166,9 +175,8 @@
 
     <!-- DATABASE & ROUTING LOGIC -->
     <script>
-        const MASTER_PASSWORD = "classof2026"; // Change main website password here
+        const MASTER_PASSWORD = "classof2026"; 
 
-        // MASTER DATABASE: Change names, initial roles, passwords, and placeholder image filenames here
         let classmatesData = {
             "alex": {
                 name: "Alex Johnson",
@@ -189,15 +197,28 @@
         function showScreen(screenId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
+            
+            // Clear out error views when switching pages
+            document.getElementById('master-error').style.display = 'none';
+            document.getElementById('indiv-error').style.display = 'none';
+            
             if(screenId === 'screen-admin') populateAdminDropdown();
         }
 
         function unlockMaster() {
-            if (document.getElementById('master-password-input').value === MASTER_PASSWORD) {
+            const userInput = document.getElementById('master-password-input').value;
+            const errorDiv = document.getElementById('master-error');
+
+            if (userInput === MASTER_PASSWORD) {
                 generateClassGrid();
                 showScreen('screen-selection');
             } else {
-                document.getElementById('master-error').innerText = "❌ Incorrect Master Password.";
+                // 1. Popup browser box alert
+                alert("⛔ WRONG PASSWORD! Try again.");
+                
+                // 2. Bold red box layout update
+                errorDiv.innerText = "❌ Password '" + userInput + "' is incorrect!";
+                errorDiv.style.display = 'block';
             }
         }
 
@@ -208,42 +229,30 @@
                 const person = classmatesData[id];
                 const card = document.createElement('div');
                 card.className = "class-card";
-                card.onclick = () => { activeClassmateId = id; document.getElementById('indiv-password-input').value = ""; document.getElementById('indiv-title').innerText = `🔒 ${person.name}'s Vault`; showScreen('screen-individual-auth'); };
-                card.innerHTML = `<img src="${person.roleImage}" alt="${person.name}"><h3>${person.name}</h3>`;
+                card.onclick = function() { 
+                    activeClassmateId = id; 
+                    document.getElementById('indiv-password-input').value = ""; 
+                    document.getElementById('indiv-title').innerText = "🔒 " + person.name + "'s Vault"; 
+                    showScreen('screen-individual-auth'); 
+                };
+                card.innerHTML = '<img src="' + person.roleImage + '" alt="' + person.name + '"><h3>' + person.name + '</h3>';
                 container.appendChild(card);
             }
         }
 
         function unlockIndividual() {
+            const userInput = document.getElementById('indiv-password-input').value;
             const targetPerson = classmatesData[activeClassmateId];
-            if (document.getElementById('indiv-password-input').value === targetPerson.password) {
-                document.getElementById('gallery-title').innerText = `🎉 ${targetPerson.name}'s Memories`;
+            const errorDiv = document.getElementById('indiv-error');
+
+            if (userInput === targetPerson.password) {
+                document.getElementById('gallery-title').innerText = "🎉 " + targetPerson.name + "'s Memories";
                 const container = document.getElementById('gallery-images-container');
                 container.innerHTML = "";
-                targetPerson.memories.forEach(imgUrl => {
+                targetPerson.memories.forEach(function(imgUrl) {
                     const imgElement = document.createElement('img');
                     imgElement.src = imgUrl;
                     container.appendChild(imgElement);
                 });
                 showScreen('screen-gallery');
             } else {
-                document.getElementById('indiv-error').innerText = "❌ Wrong personal password.";
-            }
-        }
-
-        function populateAdminDropdown() {
-            const dropdown = document.getElementById('admin-select-student');
-            dropdown.innerHTML = "";
-            for (const id in classmatesData) {
-                dropdown.innerHTML += `<option value="${id}">${classmatesData[id].name}</option>`;
-            }
-        }
-
-        function addNewImageToData() {
-            const studentId = document.getElementById('admin-select-student').value;
-            const newImg = document.getElementById('admin-image-input').value.trim();
-            
-            if(!newImg) return alert("Please type an image filename first!");
-            
-            classmatesData[studentId].memories.push(newImg);
-            
