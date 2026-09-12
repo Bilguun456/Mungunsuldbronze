@@ -1,194 +1,454 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎓 Class Memories Vault</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #0f111a;
-            color: #ffffff;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            box-sizing: border-box;
-        }
-        .screen { display: none; width: 100%; max-width: 1000px; text-align: center; background: #1a1d29; padding: 40px; border-radius: 16px; box-shadow: 0 12px 32px rgba(0,0,0,0.6); }
-        .active { display: block; }
-        input, select, textarea { padding: 14px; font-size: 16px; border: 2px solid #2e3440; border-radius: 8px; background: #242938; color: white; outline: none; margin-bottom: 15px; width: 260px; text-align: center; }
-        button { padding: 14px 28px; font-size: 16px; background-color: #4c566a; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: opacity 0.2s; }
-        button.primary-btn { background-color: #81a1c1; color: #2e3440; }
-        button:hover { opacity: 0.9; }
-        .back-btn { margin-top: 20px; background-color: #434c5e; }
-        .error-message { color: #bf616a; margin-top: 10px; font-weight: bold; height: 20px; }
-        .class-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 25px; margin-top: 30px; }
-        .class-card { background: #242938; border-radius: 12px; overflow: hidden; cursor: pointer; border: 2px solid transparent; transition: transform 0.2s, border-color 0.2s; }
-        .class-card:hover { transform: translateY(-5px); border-color: #81a1c1; }
-        .class-card img { width: 100%; height: 200px; object-fit: cover; }
-        .class-card h3 { margin: 15px 0; font-size: 18px; }
-        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 30px; }
-        .gallery-grid img { width: 100%; height: auto; border-radius: 8px; }
-        #admin-link { position: fixed; bottom: 15px; right: 15px; color: #4c566a; text-decoration: none; font-size: 12px; }
-        textarea { width: 100%; max-width: 600px; height: 150px; font-family: monospace; text-align: left; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vault</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0c0c0e; --surface: #141418; --surface2: #1c1c22;
+    --border: #2a2a35; --text: #e8e8f0; --muted: #666678;
+    --accent: #7c6af7; --accent2: #a89cf7;
+    --danger: #e05555; --success: #4caf82; --radius: 10px;
+  }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .screen { display: none; width: 100%; max-width: 1000px; }
+  .screen.active { display: block; }
+  .auth-box { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 48px 40px; max-width: 420px; margin: 0 auto; text-align: center; }
+  .auth-box h2 { font-size: 22px; font-weight: 600; margin-bottom: 8px; }
+  .auth-box p { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
+  input, select { padding: 11px 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-size: 14px; outline: none; transition: border-color 0.2s; }
+  input:focus { border-color: var(--accent); }
+  .auth-box input { width: 100%; margin-bottom: 12px; }
+  .err { color: var(--danger); font-size: 13px; height: 20px; margin-top: 8px; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 11px 22px; border-radius: var(--radius); font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: opacity 0.15s, transform 0.1s; }
+  .btn:hover { opacity: 0.85; }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: var(--accent); color: #fff; width: 100%; justify-content: center; padding: 13px; }
+  .btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-sm { padding: 7px 14px; font-size: 13px; }
+  .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
+  .header h1 { font-size: 20px; font-weight: 700; }
+  .vault-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+  .vault-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; cursor: pointer; transition: border-color 0.2s, transform 0.15s; }
+  .vault-card:hover { border-color: var(--accent); transform: translateY(-3px); }
+  .vault-thumb { width: 100%; height: 140px; object-fit: cover; display: block; }
+  .vault-thumb-placeholder { width: 100%; height: 140px; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 36px; }
+  .vault-name { padding: 14px 16px; font-size: 15px; font-weight: 600; }
+  .vault-count { padding: 0 16px 14px; font-size: 12px; color: var(--muted); }
+  .gallery-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .gallery-header h2 { font-size: 20px; font-weight: 700; flex: 1; }
+  .controls-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+  .controls-bar label { font-size: 13px; color: var(--muted); }
+  .controls-bar input[type=range] { accent-color: var(--accent); width: 90px; }
+  #gallery-grid { transition: column-count 0.2s; }
+  #gallery-grid img { width: 100%; display: block; border-radius: 8px; cursor: pointer; transition: opacity 0.2s; }
+  #gallery-grid img:hover { opacity: 0.82; }
+  #lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.93); z-index: 999; align-items: center; justify-content: center; }
+  #lightbox.open { display: flex; }
+  #lightbox img { max-width: 90vw; max-height: 90vh; border-radius: 8px; }
+  #lb-close { position: fixed; top: 20px; right: 24px; font-size: 28px; cursor: pointer; color: #fff; background: none; border: none; }
+  .admin-section { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; margin-bottom: 20px; }
+  .admin-section h3 { font-size: 15px; font-weight: 700; margin-bottom: 16px; color: var(--accent2); }
+  .form-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+  .form-row input, .form-row select { flex: 1; min-width: 140px; }
+  .status { font-size: 13px; color: var(--success); height: 20px; margin-top: 6px; }
+  .person-list { display: flex; flex-direction: column; gap: 8px; }
+  .person-row { display: flex; align-items: center; gap: 10px; background: var(--surface2); padding: 10px 14px; border-radius: 8px; font-size: 14px; }
+  .person-row span { flex: 1; }
+  .person-row .muted { color: var(--muted); font-size: 12px; }
+
+  /* GitHub browser */
+  .gh-browser { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-top: 12px; }
+  .gh-browser-header { background: var(--surface2); padding: 10px 14px; font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+  .gh-image-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; padding: 12px; max-height: 320px; overflow-y: auto; background: var(--bg); }
+  .gh-img-item { position: relative; border-radius: 6px; overflow: hidden; cursor: pointer; border: 2px solid transparent; transition: border-color 0.15s; }
+  .gh-img-item:hover { border-color: var(--accent); }
+  .gh-img-item.selected { border-color: var(--success); }
+  .gh-img-item img { width: 100%; height: 80px; object-fit: cover; display: block; }
+  .gh-img-item .check { position: absolute; top: 4px; right: 4px; background: var(--success); color: #fff; border-radius: 50%; width: 18px; height: 18px; font-size: 11px; display: none; align-items: center; justify-content: center; }
+  .gh-img-item.selected .check { display: flex; }
+  .gh-empty { padding: 24px; text-align: center; color: var(--muted); font-size: 13px; }
+</style>
 </head>
 <body>
 
-<div id="screen-master-auth" class="screen active">
-    <h2>🔒 Class Vault Entrance</h2>
-    <p>Enter the main classroom password to enter:</p>
-    <input type="password" id="master-password-input" placeholder="Master Password" onkeydown="if(event.key==='Enter') unlockMaster()">
-    <br>
-    <button class="primary-btn" onclick="unlockMaster()">Unlock Portal</button>
-    <div id="master-error" class="error-message"></div>
+<!-- MASTER AUTH -->
+<div id="s-master" class="screen active">
+  <div class="auth-box">
+    <h2>Vault</h2>
+    <p>Enter the master password.</p>
+    <input type="password" id="master-in" placeholder="Master password" onkeydown="if(event.key==='Enter')unlockMaster()">
+    <button class="btn btn-primary" onclick="unlockMaster()">Enter</button>
+    <div class="err" id="master-err"></div>
+  </div>
 </div>
 
-<div id="screen-selection" class="screen">
-    <h2>🎓 Who goes there?</h2>
-    <p>Select your name to unlock your personalized memory vault.</p>
-    <div class="class-grid" id="classmate-cards-container"></div>
-    <br>
-    <a href="#" id="admin-link" onclick="showScreen('screen-admin')">⚙️ Admin Panel</a>
+<!-- VAULT SELECTION -->
+<div id="s-vaults" class="screen">
+  <div class="header">
+    <h1>Vaults</h1>
+    <button class="btn btn-ghost btn-sm" onclick="show('s-admin-auth')">Admin</button>
+  </div>
+  <div class="vault-grid" id="vault-grid"></div>
 </div>
 
-<div id="screen-individual-auth" class="screen">
-    <h2 id="indiv-title">🔒 Personal Vault</h2>
-    <p>Enter your unique personal password to view your memories:</p>
-    <input type="password" id="indiv-password-input" placeholder="Your Password" onkeydown="if(event.key==='Enter') unlockIndividual()">
-    <br>
-    <button class="primary-btn" onclick="unlockIndividual()">Unlock Memories</button>
-    <div id="indiv-error" class="error-message"></div>
-    <br>
-    <button class="back-btn" onclick="showScreen('screen-selection')">← Back to Class</button>
+<!-- VAULT AUTH -->
+<div id="s-vault-auth" class="screen">
+  <div class="auth-box">
+    <h2 id="vault-auth-title">Vault</h2>
+    <p>Enter the password for this vault.</p>
+    <input type="password" id="vault-in" placeholder="Password" onkeydown="if(event.key==='Enter')unlockVault()">
+    <button class="btn btn-primary" onclick="unlockVault()">Unlock</button>
+    <div class="err" id="vault-err"></div>
+    <br><br>
+    <button class="btn btn-ghost btn-sm" onclick="show('s-vaults')">← Back</button>
+  </div>
 </div>
 
-<div id="screen-gallery" class="screen">
-    <h1 id="gallery-title">🎉 Your Memories</h1>
-    <p>A collection of our best moments together.</p>
-    <div class="gallery-grid" id="gallery-images-container"></div>
-    <br>
-    <button class="back-btn" onclick="showScreen('screen-selection')">← Back to Class</button>
+<!-- GALLERY -->
+<div id="s-gallery" class="screen">
+  <div class="gallery-header">
+    <button class="btn btn-ghost btn-sm" onclick="show('s-vaults')">← Back</button>
+    <h2 id="gallery-title">Gallery</h2>
+  </div>
+  <div class="controls-bar">
+    <label>Columns</label>
+    <input type="range" id="col-slider" min="1" max="6" value="3" oninput="setCols(this.value)">
+    <span id="col-label" style="font-size:13px;color:var(--muted)">3</span>
+    <label style="margin-left:10px">Gap</label>
+    <input type="range" id="gap-slider" min="0" max="40" value="10" oninput="setGap(this.value)">
+    <span id="gap-label" style="font-size:13px;color:var(--muted)">10px</span>
+  </div>
+  <div id="gallery-grid"></div>
 </div>
 
-<div id="screen-admin" class="screen">
-    <h2>⚙️ Admin Panel</h2>
-    <p>Add a new image URL for a classmate.</p>
-    <label>Select Classmate:</label><br>
-    <select id="admin-select-student"></select><br>
-    <input type="text" id="admin-image-input" placeholder="https://image-url.jpg"><br>
-    <button class="primary-btn" onclick="addNewImage()">Add Image</button>
-    <p id="admin-status" style="color:#a3be8c;height:20px;"></p>
-    <br>
-    <button class="back-btn" onclick="showScreen('screen-selection')">← Back to Website</button>
+<!-- ADMIN AUTH -->
+<div id="s-admin-auth" class="screen">
+  <div class="auth-box">
+    <h2>Admin</h2>
+    <p>Enter the admin code.</p>
+    <input type="password" id="admin-in" placeholder="Admin code" onkeydown="if(event.key==='Enter')unlockAdmin()">
+    <button class="btn btn-primary" onclick="unlockAdmin()">Enter</button>
+    <div class="err" id="admin-err"></div>
+    <br><br>
+    <button class="btn btn-ghost btn-sm" onclick="show('s-vaults')">← Back</button>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="s-admin" class="screen">
+  <div class="header">
+    <h1>Admin Panel</h1>
+    <button class="btn btn-ghost btn-sm" onclick="show('s-vaults')">← Exit</button>
+  </div>
+
+  <div class="admin-section">
+    <h3>GitHub Image Browser</h3>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Connect your GitHub repo to browse and add images directly.</p>
+    <div class="form-row">
+      <input type="text" id="gh-user" placeholder="GitHub username">
+      <input type="text" id="gh-repo" placeholder="Repo name">
+      <input type="text" id="gh-folder" placeholder="Folder path (e.g. images)">
+      <button class="btn btn-ghost btn-sm" onclick="loadGithub()">Browse</button>
+    </div>
+    <div class="form-row" style="margin-bottom:6px">
+      <select id="gh-vault-select"></select>
+      <button class="btn btn-primary btn-sm" onclick="addSelectedImages()" id="gh-add-btn" style="display:none">Add Selected to Vault</button>
+    </div>
+    <div class="status" id="gh-status"></div>
+    <div class="gh-browser" id="gh-browser" style="display:none">
+      <div class="gh-browser-header">
+        <span id="gh-browser-path">—</span>
+        <span style="margin-left:auto" id="gh-selected-count"></span>
+      </div>
+      <div class="gh-image-grid" id="gh-image-grid"></div>
+    </div>
+  </div>
+
+  <div class="admin-section">
+    <h3>Add Person</h3>
+    <div class="form-row">
+      <input type="text" id="new-name" placeholder="Display name">
+      <input type="text" id="new-id" placeholder="ID (no spaces)">
+      <input type="password" id="new-pass" placeholder="Password">
+      <button class="btn btn-primary btn-sm" onclick="addPerson()">Add</button>
+    </div>
+    <div class="status" id="add-status"></div>
+  </div>
+
+  <div class="admin-section">
+    <h3>Add Image by URL</h3>
+    <div class="form-row">
+      <select id="img-person"></select>
+      <input type="text" id="img-url" placeholder="https://...">
+      <button class="btn btn-primary btn-sm" onclick="addImageUrl()">Add</button>
+    </div>
+    <div class="status" id="img-status"></div>
+  </div>
+
+  <div class="admin-section">
+    <h3>Change Password</h3>
+    <div class="form-row">
+      <select id="pass-person"></select>
+      <input type="password" id="new-pass2" placeholder="New password">
+      <button class="btn btn-primary btn-sm" onclick="changePass()">Update</button>
+    </div>
+    <div class="status" id="pass-status"></div>
+  </div>
+
+  <div class="admin-section">
+    <h3>All Vaults</h3>
+    <div class="person-list" id="person-list"></div>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div id="lightbox">
+  <button id="lb-close" onclick="closeLb()">✕</button>
+  <img id="lb-img" src="" alt="">
 </div>
 
 <script>
-    const MASTER_PASSWORD = "classof2026";
+const MASTER_PASS = "vault2026";
+const ADMIN_CODE  = "tuff2026admin";
+const STORE_KEY   = "vault_data_v1";
 
-    let classmatesData = {
-        "bilguun": {
-            name: "Билгүүн",
-            roleImage: "https://picsum.photos/seed/bilguun/400/200",
-            password: "bilguun123",
-            memories: [
-                "https://picsum.photos/seed/mem1/600/400",
-                "https://picsum.photos/seed/mem2/600/400"
-            ]
-        },
-        "alex": {
-            name: "Alex Johnson",
-            roleImage: "https://picsum.photos/seed/alex/400/200",
-            password: "alex-secret-key",
-            memories: [
-                "https://picsum.photos/seed/alex1/600/400"
-            ]
-        },
-        "sam": {
-            name: "Sam Smith",
-            roleImage: "https://picsum.photos/seed/sam/400/200",
-            password: "sam-secret-key",
-            memories: [
-                "https://picsum.photos/seed/sam1/600/400"
-            ]
-        }
-    };
+let data = loadData();
+let activeVaultId = null;
+let ghSelectedUrls = [];
 
-    let activeClassmateId = null;
-
-    function showScreen(screenId) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById(screenId).classList.add('active');
-        if (screenId === 'screen-admin') populateAdminDropdown();
+function loadData() {
+  try {
+    const saved = localStorage.getItem(STORE_KEY);
+    if (saved) return JSON.parse(saved);
+  } catch(e) {}
+  return {
+    bilguun: {
+      name: "Билгүүн",
+      password: "bilguun123",
+      images: [
+        "https://picsum.photos/seed/b1/800/600",
+        "https://picsum.photos/seed/b2/600/900",
+        "https://picsum.photos/seed/b3/700/500"
+      ]
     }
+  };
+}
 
-    function unlockMaster() {
-        const input = document.getElementById('master-password-input').value;
-        if (input === MASTER_PASSWORD) {
-            generateClassGrid();
-            showScreen('screen-selection');
-        } else {
-            document.getElementById('master-error').innerText = "❌ Incorrect Master Password.";
-        }
-    }
+function save() {
+  localStorage.setItem(STORE_KEY, JSON.stringify(data));
+}
 
-    function generateClassGrid() {
-        const container = document.getElementById('classmate-cards-container');
-        container.innerHTML = "";
-        for (const id in classmatesData) {
-            const person = classmatesData[id];
-            const card = document.createElement('div');
-            card.className = "class-card";
-            card.onclick = () => {
-                activeClassmateId = id;
-                document.getElementById('indiv-password-input').value = "";
-                document.getElementById('indiv-error').innerText = "";
-                document.getElementById('indiv-title').innerText = "🔒 " + person.name + "'s Vault";
-                showScreen('screen-individual-auth');
-            };
-            card.innerHTML = '<img src="' + person.roleImage + '" alt="' + person.name + '"><h3>' + person.name + '</h3>';
-            container.appendChild(card);
-        }
-    }
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
 
-    function unlockIndividual() {
-        const targetPerson = classmatesData[activeClassmateId];
-        const input = document.getElementById('indiv-password-input').value;
-        if (input === targetPerson.password) {
-            document.getElementById('gallery-title').innerText = "🎉 " + targetPerson.name + "'s Memories";
-            const container = document.getElementById('gallery-images-container');
-            container.innerHTML = "";
-            targetPerson.memories.forEach(imgUrl => {
-                const img = document.createElement('img');
-                img.src = imgUrl;
-                container.appendChild(img);
-            });
-            showScreen('screen-gallery');
-        } else {
-            document.getElementById('indiv-error').innerText = "❌ Wrong personal password.";
-        }
-    }
+function unlockMaster() {
+  if (document.getElementById('master-in').value === MASTER_PASS) {
+    renderVaults(); show('s-vaults');
+  } else {
+    document.getElementById('master-err').textContent = "Wrong password.";
+  }
+}
 
-    function populateAdminDropdown() {
-        const dropdown = document.getElementById('admin-select-student');
-        dropdown.innerHTML = "";
-        for (const id in classmatesData) {
-            dropdown.innerHTML += '<option value="' + id + '">' + classmatesData[id].name + '</option>';
-        }
-    }
+function renderVaults() {
+  const grid = document.getElementById('vault-grid');
+  grid.innerHTML = '';
+  for (const id in data) {
+    const v = data[id];
+    const card = document.createElement('div');
+    card.className = 'vault-card';
+    card.onclick = () => openVaultAuth(id);
+    const first = v.images[0];
+    card.innerHTML = first
+      ? `<img class="vault-thumb" src="${first}" loading="lazy">`
+      : `<div class="vault-thumb-placeholder">📁</div>`;
+    card.innerHTML += `<div class="vault-name">${v.name}</div><div class="vault-count">${v.images.length} image${v.images.length!==1?'s':''}</div>`;
+    grid.appendChild(card);
+  }
+}
 
-    function addNewImage() {
-        const studentId = document.getElementById('admin-select-student').value;
-        const newImg = document.getElementById('admin-image-input').value.trim();
-        if (!newImg) { alert("Please enter an image URL first!"); return; }
-        classmatesData[studentId].memories.push(newImg);
-        document.getElementById('admin-image-input').value = "";
-        document.getElementById('admin-status').innerText = "✅ Image added for " + classmatesData[studentId].name;
-        setTimeout(() => document.getElementById('admin-status').innerText = "", 3000);
+function openVaultAuth(id) {
+  activeVaultId = id;
+  document.getElementById('vault-auth-title').textContent = data[id].name + "'s Vault";
+  document.getElementById('vault-in').value = '';
+  document.getElementById('vault-err').textContent = '';
+  show('s-vault-auth');
+}
+
+function unlockVault() {
+  const v = data[activeVaultId];
+  if (document.getElementById('vault-in').value === v.password) {
+    renderGallery(activeVaultId); show('s-gallery');
+  } else {
+    document.getElementById('vault-err').textContent = "Wrong password.";
+  }
+}
+
+function renderGallery(id) {
+  const v = data[id];
+  document.getElementById('gallery-title').textContent = v.name;
+  const grid = document.getElementById('gallery-grid');
+  grid.innerHTML = '';
+  const mb = document.getElementById('gap-slider').value + 'px';
+  v.images.forEach(url => {
+    const img = document.createElement('img');
+    img.src = url; img.loading = 'lazy';
+    img.style.marginBottom = mb;
+    img.onclick = () => openLb(url);
+    grid.appendChild(img);
+  });
+  setCols(document.getElementById('col-slider').value);
+  setGap(document.getElementById('gap-slider').value);
+}
+
+function setCols(v) {
+  const g = document.getElementById('gallery-grid');
+  g.style.columnCount = v;
+  g.style.columnGap = document.getElementById('gap-slider').value + 'px';
+  document.getElementById('col-label').textContent = v;
+}
+
+function setGap(v) {
+  const g = document.getElementById('gallery-grid');
+  g.style.columnGap = v + 'px';
+  document.querySelectorAll('#gallery-grid img').forEach(img => img.style.marginBottom = v + 'px');
+  document.getElementById('gap-label').textContent = v + 'px';
+}
+
+function openLb(url) {
+  document.getElementById('lb-img').src = url;
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLb() { document.getElementById('lightbox').classList.remove('open'); }
+document.getElementById('lightbox').addEventListener('click', e => { if(e.target===document.getElementById('lightbox')) closeLb(); });
+
+function unlockAdmin() {
+  if (document.getElementById('admin-in').value === ADMIN_CODE) {
+    renderAdminPanel(); show('s-admin');
+  } else {
+    document.getElementById('admin-err').textContent = "Wrong code.";
+  }
+}
+
+function renderAdminPanel() {
+  ['img-person','pass-person','gh-vault-select'].forEach(id => {
+    const sel = document.getElementById(id);
+    sel.innerHTML = '';
+    for (const k in data) sel.innerHTML += `<option value="${k}">${data[k].name}</option>`;
+  });
+  const list = document.getElementById('person-list');
+  list.innerHTML = '';
+  for (const k in data) {
+    const row = document.createElement('div');
+    row.className = 'person-row';
+    row.innerHTML = `<span>${data[k].name}</span><span class="muted">${k}</span><span class="muted">${data[k].images.length} imgs</span>`;
+    list.appendChild(row);
+  }
+}
+
+async function loadGithub() {
+  const user   = document.getElementById('gh-user').value.trim();
+  const repo   = document.getElementById('gh-repo').value.trim();
+  const folder = document.getElementById('gh-folder').value.trim();
+  if (!user || !repo) { document.getElementById('gh-status').textContent = "Enter username and repo."; return; }
+  const path = folder ? folder : '';
+  const url = `https://api.github.com/repos/${user}/${repo}/contents/${path}`;
+  document.getElementById('gh-status').textContent = "Loading...";
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Repo not found or private.");
+    const files = await res.json();
+    const imgs = files.filter(f => /\.(jpg|jpeg|png|gif|webp|avif)$/i.test(f.name));
+    if (!imgs.length) {
+      document.getElementById('gh-status').textContent = "No images found in that folder.";
+      document.getElementById('gh-browser').style.display = 'none';
+      return;
     }
+    document.getElementById('gh-browser-path').textContent = `${user}/${repo}/${path}`;
+    document.getElementById('gh-browser').style.display = 'block';
+    document.getElementById('gh-add-btn').style.display = 'inline-flex';
+    document.getElementById('gh-status').textContent = `${imgs.length} images found.`;
+    ghSelectedUrls = [];
+    const grid = document.getElementById('gh-image-grid');
+    grid.innerHTML = '';
+    imgs.forEach(f => {
+      const rawUrl = f.download_url;
+      const item = document.createElement('div');
+      item.className = 'gh-img-item';
+      item.innerHTML = `<img src="${rawUrl}" loading="lazy"><div class="check">✓</div>`;
+      item.onclick = () => {
+        item.classList.toggle('selected');
+        if (item.classList.contains('selected')) ghSelectedUrls.push(rawUrl);
+        else ghSelectedUrls = ghSelectedUrls.filter(u => u !== rawUrl);
+        document.getElementById('gh-selected-count').textContent = ghSelectedUrls.length ? `${ghSelectedUrls.length} selected` : '';
+      };
+      grid.appendChild(item);
+    });
+  } catch(e) {
+    document.getElementById('gh-status').textContent = e.message;
+  }
+}
+
+function addSelectedImages() {
+  if (!ghSelectedUrls.length) { document.getElementById('gh-status').textContent = "Select at least one image."; return; }
+  const id = document.getElementById('gh-vault-select').value;
+  data[id].images.push(...ghSelectedUrls);
+  save();
+  document.getElementById('gh-status').textContent = `${ghSelectedUrls.length} image(s) added to ${data[id].name}'s vault.`;
+  ghSelectedUrls = [];
+  document.querySelectorAll('.gh-img-item').forEach(i => i.classList.remove('selected'));
+  document.getElementById('gh-selected-count').textContent = '';
+  renderAdminPanel();
+  renderVaults();
+  setTimeout(() => document.getElementById('gh-status').textContent = '', 4000);
+}
+
+function addPerson() {
+  const name = document.getElementById('new-name').value.trim();
+  const id   = document.getElementById('new-id').value.trim().toLowerCase().replace(/\s+/g,'');
+  const pass = document.getElementById('new-pass').value;
+  if (!name||!id||!pass) { showStatus('add-status','Fill all fields.',true); return; }
+  if (data[id]) { showStatus('add-status','ID already exists.',true); return; }
+  data[id] = { name, password: pass, images: [] };
+  save();
+  document.getElementById('new-name').value='';
+  document.getElementById('new-id').value='';
+  document.getElementById('new-pass').value='';
+  showStatus('add-status',`${name} added.`);
+  renderAdminPanel(); renderVaults();
+}
+
+function addImageUrl() {
+  const id  = document.getElementById('img-person').value;
+  const url = document.getElementById('img-url').value.trim();
+  if (!url) return;
+  data[id].images.push(url);
+  save();
+  document.getElementById('img-url').value = '';
+  showStatus('img-status',`Image added to ${data[id].name}.`);
+  renderAdminPanel();
+}
+
+function changePass() {
+  const id   = document.getElementById('pass-person').value;
+  const pass = document.getElementById('new-pass2').value;
+  if (!pass) return;
+  data[id].password = pass;
+  save();
+  document.getElementById('new-pass2').value = '';
+  showStatus('pass-status',`Password updated for ${data[id].name}.`);
+}
+
+function showStatus(id, msg, isErr=false) {
+  const el = document.getElementById(id);
+  el.style.color = isErr ? 'var(--danger)' : 'var(--success)';
+  el.textContent = msg;
+  setTimeout(() => el.textContent='', 3000);
+}
 </script>
 </body>
 </html>
